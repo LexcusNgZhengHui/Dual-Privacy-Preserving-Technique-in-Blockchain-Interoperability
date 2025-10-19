@@ -60,7 +60,9 @@ class EvaluationMetrics:
         data = self.metrics.get(metric_name, [])
         return sum(data) / len(data) if data else 0
 
-    def generate_report(self):
+    """Add on total_duration , 19oct2025"""
+
+    def generate_report(self, total_duration: float = 0):
         """Generates a summary report and saves all plots."""
         self.logger.info("Generating evaluation report and plots...")
 
@@ -74,6 +76,17 @@ class EvaluationMetrics:
         total_adversarial = self.adversarial_errors
         adversarial_block_rate = 100.0 if total_adversarial > 0 else 0
 
+        # --- NEW: Calculations for TPS --- ,19Oct2025
+        # We consider only the main transactions (valid + adversarial) for TPS
+        tps_total_transactions = (
+            Config.NUM_TRANSACTIONS + 1
+        )  # (N valid + 1 adversarial)
+        throughput_tps = (
+            (tps_total_transactions / total_duration) if total_duration > 0 else 0
+        )
+
+        # --- MODIFIED: Report String --- , 19Oct2025
+        # Add on Blockchain Execution and Cost Metric and Resource Utilization (Approximate) 19Oct2025"
         report = f"""
         ======================= Evaluation Report =======================
         
@@ -102,6 +115,16 @@ class EvaluationMetrics:
         - ZKP CPU Usage (%):    {self._calculate_average('zkp_cpu'):.2f}
         - HE Memory (bytes):    {self._calculate_average('he_memory'):.0f}
         - ZKP Memory (bytes):   {self._calculate_average('zkp_memory'):.0f}
+
+        Blockchain Execution and Cost Metrics:
+        - Contract Deployment Cost (C_dep): {self.metrics.get('contract_deployment_cost', [0])[0]} gas
+        - Average Gas per Verification (G): {self._calculate_average('onchain_gas_fee'):.2f} gas
+        - Average Transaction Latency (L_tx): {self._calculate_average('transaction_latency'):.4f} seconds
+        - System Throughput (TPS): {throughput_tps:.2f} transactions/sec
+
+        Resource Utilization (Approximate):
+        - Avg. CPU Usage (U_cpu, ZKP Gen): {self._calculate_average('zkp_cpu'):.2f}%
+        - Avg. Memory Usage (U_mem, ZKP Gen): {self._calculate_average('zkp_memory') / 1024:.2f} KB
         
         =================================================================
         """

@@ -200,18 +200,31 @@ def main():
             abac_engine=abac_engine,
             metrics=metrics,
         )
+        # NEW: Start timer for TPS calculation
+        simulation_start_time = time.perf_counter()
 
         for _ in range(Config.NUM_TRANSACTIONS):
             run_valid_transaction_simulation(middleware)
 
         run_adversarial_test(middleware)
+        """Add on in 19 Oct 2025
+        Note: The scalability test is not a standard transaction,
+        so it's often excluded from simple TPS calculations.
+        We will keep it inside the timer for simplicity here."""
         run_scalability_test(middleware)
+
+        # NEW: Calculate total simulation duration
+        simulation_duration = time.perf_counter() - simulation_start_time
 
         logging.info("==============================================")
         # *** FIX: Removed emoji for compatibility ***
         logging.info("[REPORT] Generating Final Evaluation Report")
         logging.info("==============================================")
-        middleware.metrics.generate_report()
+
+        # NEW: Pass the duration to the report generator, 19Oct2025
+        middleware.metrics.generate_report(total_duration=simulation_duration)
+
+        #middleware.metrics.generate_report()
         logging.info(
             "Report generation complete. Check the output directory for plots and the log file."
         )

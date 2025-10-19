@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import time
 from typing import Dict, Tuple, List, Any, Optional
 
 from solcx import compile_files
@@ -42,9 +43,13 @@ class CrossChainMiddleware:
         self.ethereum = self._connect_to_ethereum(Config.GANACHE_URL)
 
         compiled_sol = self._compile_contracts(Config.CONTRACT_FILES)
-        self.zkp_contract = self._deploy_contract(
+
+        # MODIFIED: Capture the deployment gas cost from the return value , 19Oct2025#  
+        self.zkp_contract, deployment_gas = self._deploy_contract(
             self.ethereum, compiled_sol, Config.ZKP_VERIFIER_CONTRACT_ID
         )
+        if deployment_gas > 0:
+            self.metrics.record("contract_deployment_cost", deployment_gas)
 
         self.role_secrets = Config.ROLE_SECRETS
         self.role_public_keys = self._precompute_public_keys()
@@ -76,7 +81,7 @@ class CrossChainMiddleware:
 
     def _deploy_contract(
         self, w3: Web3, compiled_sol: Dict, contract_id: str
-    ) -> Optional[Contract]:
+    ) -> Tuple[Optional[Contract], int]: # MODIFIED: Return type to include gas cost, 19Oct2025
         """Deploys a single contract to the blockchain."""
         contract_name = contract_id.split(":")[-1]
         self.logger.info(f"Deploying {contract_name} contract...")
@@ -85,7 +90,7 @@ class CrossChainMiddleware:
             self.logger.critical(
                 f"Contract ID '{contract_id}' not found in compiled output."
             )
-            return None
+            return None,0
 
         contract_data = compiled_sol[contract_id]
         abi = contract_data["abi"]
@@ -102,12 +107,17 @@ class CrossChainMiddleware:
             tx_hash = ContractFactory.constructor().transact()
             tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
+            # NEW: Capture deployment gas cost
+            deployment_gas_cost = tx_receipt.get('gasUsed', 0)
+            self.logger.info(f"Contract deployment cost: {deployment_gas_cost} gas")
+
             contract_address = tx_receipt.contractAddress
             self.logger.info(
                 f"{contract_name} deployed successfully at address: {contract_address}"
             )
 
-            return w3.eth.contract(address=contract_address, abi=abi)
+            contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+            return contract_instance, deployment_gas_cost # MODIFIED: Return cost
         except Exception as e:
             self.logger.critical(f"Failed to deploy {contract_name}: {e}")
             raise
@@ -178,11 +188,20 @@ class CrossChainMiddleware:
                     self.logger.info(
                         "Submitting transaction to measure on-chain gas cost..."
                     )
+
+                    "NEW: Start latency timer, added on 19Oct2025"
+                    latency_start_time = time.perf_counter()
+
                     tx_hash = self.zkp_contract.functions.verifyProof(
                         commitments, responses, public_keys
                     ).transact({"from": self.ethereum.eth.default_account})
 
                     tx_receipt = self.ethereum.eth.wait_for_transaction_receipt(tx_hash)
+
+                    " NEW: Calculate and record latency,added on 19Oct2025"
+                    latency = time.perf_counter() - latency_start_time
+                    self.metrics.record("transaction_latency", latency)
+
                     gas_used = tx_receipt.get("gasUsed", 0)
                     self.metrics.record("onchain_gas_fee", gas_used)
                     self.logger.info(
