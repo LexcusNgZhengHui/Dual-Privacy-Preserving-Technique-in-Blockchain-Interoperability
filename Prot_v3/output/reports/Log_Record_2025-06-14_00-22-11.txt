@@ -1,0 +1,166 @@
+[2025-06-14 00:22:11] [INFO] [root] - Logging initialized. Full log record will be saved to: output\reports\Log_Record_2025-06-14_00-22-11.txt
+[2025-06-14 00:22:11] [INFO] [EvaluationMetrics] - Metrics reports will be saved to 'output\reports'
+[2025-06-14 00:22:11] [INFO] [SimpleZKP] - Initialized with insecure test parameters (p=23, g=5). DO NOT USE IN PRODUCTION.
+[2025-06-14 00:22:12] [INFO] [HEHelper] - TenSEAL context created successfully.
+[2025-06-14 00:22:12] [INFO] [ABACPolicyEngine] - Initialized with 1 policies.
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Connected to Ethereum node. Default account: 0x29006e70481b47d9264B2E45E85e58C52b5eE079
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Compiling Solidity files: ['./zkpverifier.sol']...
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Contracts compiled successfully.
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Deploying ZKPVerifier contract...
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - ABI for ZKPVerifier saved to output\compiled_ABIs\ZKPVerifier.json
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - ZKPVerifier deployed successfully at address: 0x1e56679D6afA1F18589AF5F27c26e61398030B48
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Pre-computing public keys for all roles...
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Middleware initialization complete.
+[2025-06-14 00:22:12] [INFO] [root] - ==============================================
+[2025-06-14 00:22:12] [INFO] [root] - ==============================================
+[2025-06-14 00:22:12] [INFO] [root] - Simulating transaction for user role: 'doctor' (secret: 1)
+[2025-06-14 00:22:12] [INFO] [root] - Encrypting user attributes using HE...
+[2025-06-14 00:22:12] [INFO] [root] - Generating ZKP for user's role...
+[2025-06-14 00:22:12] [INFO] [root] - Submitting transaction to the cross-chain middleware...
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - --- Handling new transaction, expecting role: 'doctor' ---
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Off-chain ZKP verification passed. Proceeding to on-chain checks.
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - On-chain verification result (from call): True
+[2025-06-14 00:22:12] [INFO] [CrossChainMiddleware] - Submitting transaction to measure on-chain gas cost...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain transaction successful. Gas used: 36971
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - ZKP fully verified. Decrypting attributes for policy evaluation.
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Evaluating ABAC policies...
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Policy 'Allow doctors from hospital_a to access medical records if their ZKP is verified.' matched. Action: allow
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - [Cosmos] Forwarding encrypted data (first 50 bytes): 0a010112b4b5145ea1100401020000b41a05000000000028b52ffda0610006006c5b0e8efd1fd7722d10a0bc669c165cfd2f...
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - Simulating transaction for user role: 'doctor' (secret: 1)
+[2025-06-14 00:22:13] [INFO] [root] - Encrypting user attributes using HE...
+[2025-06-14 00:22:13] [INFO] [root] - Generating ZKP for user's role...
+[2025-06-14 00:22:13] [INFO] [root] - Submitting transaction to the cross-chain middleware...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - --- Handling new transaction, expecting role: 'doctor' ---
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Off-chain ZKP verification passed. Proceeding to on-chain checks.
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain verification result (from call): True
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Submitting transaction to measure on-chain gas cost...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain transaction successful. Gas used: 41097
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - ZKP fully verified. Decrypting attributes for policy evaluation.
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Evaluating ABAC policies...
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Policy 'Allow doctors from hospital_a to access medical records if their ZKP is verified.' matched. Action: allow
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - [Cosmos] Forwarding encrypted data (first 50 bytes): 0a01011280b5145ea1100401020000801a05000000000028b52ffda0610006009c5b0e8efd9fd8722d10a0bc66144de45b7c...
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - Simulating transaction for user role: 'doctor' (secret: 1)
+[2025-06-14 00:22:13] [INFO] [root] - Encrypting user attributes using HE...
+[2025-06-14 00:22:13] [INFO] [root] - Generating ZKP for user's role...
+[2025-06-14 00:22:13] [INFO] [root] - Submitting transaction to the cross-chain middleware...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - --- Handling new transaction, expecting role: 'doctor' ---
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Off-chain ZKP verification passed. Proceeding to on-chain checks.
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain verification result (from call): True
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Submitting transaction to measure on-chain gas cost...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain transaction successful. Gas used: 39034
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - ZKP fully verified. Decrypting attributes for policy evaluation.
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Evaluating ABAC policies...
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Policy 'Allow doctors from hospital_a to access medical records if their ZKP is verified.' matched. Action: allow
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - [Cosmos] Forwarding encrypted data (first 50 bytes): 0a010112bfb3145ea1100401020000bf1905000000000028b52ffda061000600f45b0e8efd5fdb722e10a0bc660d68acb3c0...
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - Simulating transaction for user role: 'doctor' (secret: 1)
+[2025-06-14 00:22:13] [INFO] [root] - Encrypting user attributes using HE...
+[2025-06-14 00:22:13] [INFO] [root] - Generating ZKP for user's role...
+[2025-06-14 00:22:13] [INFO] [root] - Submitting transaction to the cross-chain middleware...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - --- Handling new transaction, expecting role: 'doctor' ---
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Off-chain ZKP verification passed. Proceeding to on-chain checks.
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain verification result (from call): True
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Submitting transaction to measure on-chain gas cost...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain transaction successful. Gas used: 39866
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - ZKP fully verified. Decrypting attributes for policy evaluation.
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Evaluating ABAC policies...
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Policy 'Allow doctors from hospital_a to access medical records if their ZKP is verified.' matched. Action: allow
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - [Cosmos] Forwarding encrypted data (first 50 bytes): 0a010112b7b4145ea1100401020000371a05000000000028b52ffda061000600dc5a0e8efd9fd2722e10a0bc66d6c382de77...
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - Simulating transaction for user role: 'doctor' (secret: 1)
+[2025-06-14 00:22:13] [INFO] [root] - Encrypting user attributes using HE...
+[2025-06-14 00:22:13] [INFO] [root] - Generating ZKP for user's role...
+[2025-06-14 00:22:13] [INFO] [root] - Submitting transaction to the cross-chain middleware...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - --- Handling new transaction, expecting role: 'doctor' ---
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Off-chain ZKP verification passed. Proceeding to on-chain checks.
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain verification result (from call): True
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - Submitting transaction to measure on-chain gas cost...
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - On-chain transaction successful. Gas used: 41097
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - ZKP fully verified. Decrypting attributes for policy evaluation.
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Evaluating ABAC policies...
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Policy 'Allow doctors from hospital_a to access medical records if their ZKP is verified.' matched. Action: allow
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - [Cosmos] Forwarding encrypted data (first 50 bytes): 0a0101129cb2145ea11004010200001c1905000000000028b52ffda061000600545a0e8efd5fce722d10a0bc665340c9e361...
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - Simulating adversarial transaction with invalid secret: 999
+[2025-06-14 00:22:13] [INFO] [root] - Encrypting invalid user attributes using HE...
+[2025-06-14 00:22:13] [INFO] [root] - Generating ZKP for the invalid role...
+[2025-06-14 00:22:13] [INFO] [root] - Attempting to handle transaction with mismatched proof and public key context.
+[2025-06-14 00:22:13] [INFO] [CrossChainMiddleware] - --- Handling new transaction, expecting role: 'doctor' ---
+[2025-06-14 00:22:13] [ERROR] [SimpleZKP] - ZKP verification FAILED at proof #1.
+[2025-06-14 00:22:13] [WARNING] [CrossChainMiddleware] - Off-chain ZKP verification failed. Skipping on-chain check.
+[2025-06-14 00:22:13] [WARNING] [CrossChainMiddleware] - ZKP verification failed. Attributes will not be decrypted.
+[2025-06-14 00:22:13] [INFO] [ABACPolicyEngine] - Evaluating ABAC policies...
+[2025-06-14 00:22:13] [WARNING] [ABACPolicyEngine] - No policy matched the request. Denying access.
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - --- Testing with 1 attribute(s) ---
+[2025-06-14 00:22:13] [INFO] [root] - Generation time for 1 attrs: 0.005439s
+[2025-06-14 00:22:13] [INFO] [root] - Verification time for 1 attrs: 0.003692s
+[2025-06-14 00:22:13] [INFO] [root] - --- Testing with 4 attribute(s) ---
+[2025-06-14 00:22:13] [INFO] [root] - Generation time for 4 attrs: 0.005256s
+[2025-06-14 00:22:13] [INFO] [root] - Verification time for 4 attrs: 0.003166s
+[2025-06-14 00:22:13] [INFO] [root] - --- Testing with 10 attribute(s) ---
+[2025-06-14 00:22:13] [INFO] [root] - Generation time for 10 attrs: 0.006817s
+[2025-06-14 00:22:13] [INFO] [root] - Verification time for 10 attrs: 0.003115s
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [root] - ==============================================
+[2025-06-14 00:22:13] [INFO] [EvaluationMetrics] - Generating evaluation report and plots...
+[2025-06-14 00:22:13] [INFO] [EvaluationMetrics] - 
+        ======================= Evaluation Report =======================
+        
+        Overall Performance:
+        - Total Transactions Processed: 6
+        - Successful Transactions:      5
+        - Failed/Denied Transactions:   1
+        - Overall Success Rate:         83.33%
+        
+        Security Effectiveness:
+        - Valid Transactions Succeeded:   5
+        - Adversarial Attempts Blocked:   0
+        - Adversarial Block Rate:         0.00%
+
+        Average Latency per Operation (seconds):
+        - HE Encryption:        0.015419
+        - HE Decryption:        0.003416
+        - ZKP Generation:       0.003245
+        - ZKP Verification:     0.000097
+
+        Average On-Chain Cost:
+        - Gas Fee per Tx:       39613
+
+        Average Resource Usage:
+        - HE CPU Usage (%):     23.54
+        - ZKP CPU Usage (%):    27.26
+        - HE Memory (bytes):    2517333
+        - ZKP Memory (bytes):   386844
+        
+        =================================================================
+        
+[2025-06-14 00:22:14] [INFO] [EvaluationMetrics] - Plot saved: output\reports\zkp_scalability.png
+[2025-06-14 00:22:14] [INFO] [EvaluationMetrics] - Plot saved: output\reports\resource_cpu_usage.png
+[2025-06-14 00:22:14] [INFO] [EvaluationMetrics] - Plot saved: output\reports\he_performance.png
+[2025-06-14 00:22:14] [INFO] [EvaluationMetrics] - Plot saved: output\reports\zkp_performance.png
+[2025-06-14 00:22:15] [INFO] [EvaluationMetrics] - Plot saved: output\reports\he_operations_per_tx.png
+[2025-06-14 00:22:15] [INFO] [EvaluationMetrics] - Plot saved: output\reports\onchain_gas_fee.png
+[2025-06-14 00:22:15] [INFO] [root] - Report generation complete. Check the output directory for plots and the log file.
