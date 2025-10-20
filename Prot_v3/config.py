@@ -56,6 +56,6 @@ class Config:
     ]
 
     # --- Simulation Parameters ---
-    NUM_TRANSACTIONS: int = 5
+    NUM_TRANSACTIONS: int = 10
 
     # Increased to get more data points for plots

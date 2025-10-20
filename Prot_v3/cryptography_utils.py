@@ -8,6 +8,8 @@ import logging
 import random
 import time
 from typing import Tuple, List, Optional
+import sys
+import os
 
 import psutil
 import tenseal as ts
@@ -54,20 +56,28 @@ class SimpleZKP:
     ) -> Optional[Tuple[List[int], List[int]]]:
         """
         Generates a composite ZKP for multiple secrets.
+        Also measures computational resources and records the proof transmission size. 20Oct2025
         """
+        self.metrics.start_measurement("zkp_gen")
+
         if not secrets:
             self.logger.error("No secrets provided for ZKP proof generation.")
             return None
 
         start_time = time.perf_counter()
+        # Resource Monitoring Start
+        process = psutil.Process(os.getpid())
+        # Use instantaneous measurement before and after the operation
         cpu_before = psutil.cpu_percent(interval=None)
         mem_before = psutil.virtual_memory().used
 
+        # 1. Prover picks random nonce values (r_i)
         r_values = [random.randint(1, self.p - 1) for _ in secrets]
+        # 2. Prover computes commitments (A_i)
         commitments = [pow(self.g, r, self.p) for r in r_values]
-
+        # 3. Prover computes challenge (c) - H(g, A_1, A_2, ...)
         challenge = self._hash(self.g, *commitments)
-
+        # 4. Prover computes responses (z_i)
         responses = [
             (r + (secret * challenge)) % (self.p - 1)
             for r, secret in zip(r_values, secrets)
@@ -84,6 +94,15 @@ class SimpleZKP:
         self.logger.debug(f"Generated ZKP in {elapsed:.6f}s")
         self.logger.debug(f"  - Commitments: {commitments}")
         self.logger.debug(f"  - Responses:   {responses}")
+
+        # P_l Proxy: Measure Proof Size (Information Leakage Probability)
+        proof_tuple = (commitments, responses)
+        proof_str = str(proof_tuple)
+        proof_size_bytes = sys.getsizeof(proof_str)
+        proof_size_bytes = sys.getsizeof(proof_str)
+        self.metrics.record("proof_transmission_size", proof_size_bytes)
+        self.logger.info(f"Generated ZKP proof size (proxy): {proof_size_bytes} bytes.")
+
         return commitments, responses
 
     def verify_composite_proof(

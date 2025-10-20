@@ -44,7 +44,7 @@ class CrossChainMiddleware:
 
         compiled_sol = self._compile_contracts(Config.CONTRACT_FILES)
 
-        # MODIFIED: Capture the deployment gas cost from the return value , 19Oct2025#  
+        # MODIFIED: Capture the deployment gas cost from the return value, 19Oct2025
         self.zkp_contract, deployment_gas = self._deploy_contract(
             self.ethereum, compiled_sol, Config.ZKP_VERIFIER_CONTRACT_ID
         )
@@ -81,7 +81,9 @@ class CrossChainMiddleware:
 
     def _deploy_contract(
         self, w3: Web3, compiled_sol: Dict, contract_id: str
-    ) -> Tuple[Optional[Contract], int]: # MODIFIED: Return type to include gas cost, 19Oct2025
+    ) -> Tuple[
+        Optional[Contract], int
+    ]:  # MODIFIED: Return type to include gas cost, 19Oct2025
         """Deploys a single contract to the blockchain."""
         contract_name = contract_id.split(":")[-1]
         self.logger.info(f"Deploying {contract_name} contract...")
@@ -90,7 +92,7 @@ class CrossChainMiddleware:
             self.logger.critical(
                 f"Contract ID '{contract_id}' not found in compiled output."
             )
-            return None,0
+            return None, 0
 
         contract_data = compiled_sol[contract_id]
         abi = contract_data["abi"]
@@ -108,7 +110,7 @@ class CrossChainMiddleware:
             tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
             # NEW: Capture deployment gas cost
-            deployment_gas_cost = tx_receipt.get('gasUsed', 0)
+            deployment_gas_cost = tx_receipt.get("gasUsed", 0)
             self.logger.info(f"Contract deployment cost: {deployment_gas_cost} gas")
 
             contract_address = tx_receipt.contractAddress
@@ -117,7 +119,7 @@ class CrossChainMiddleware:
             )
 
             contract_instance = w3.eth.contract(address=contract_address, abi=abi)
-            return contract_instance, deployment_gas_cost # MODIFIED: Return cost
+            return contract_instance, deployment_gas_cost  # MODIFIED: Return cost
         except Exception as e:
             self.logger.critical(f"Failed to deploy {contract_name}: {e}")
             raise
@@ -154,6 +156,8 @@ class CrossChainMiddleware:
         self.logger.info(
             f"--- Handling new transaction, expecting role: '{expected_role}' ---"
         )
+        # FIX: Increment total cross-chain attempts for Ms calculation
+        self.metrics.increment_count("cross_chain_attempt")
 
         try:
             commitments, responses = zkp_proof
@@ -177,6 +181,7 @@ class CrossChainMiddleware:
                 "Off-chain ZKP verification passed. Proceeding to on-chain checks."
             )
             try:
+                # 1. Check if the proof is valid (no gas cost)
                 onchain_verified = self.zkp_contract.functions.verifyProof(
                     commitments, responses, public_keys
                 ).call()
@@ -189,16 +194,17 @@ class CrossChainMiddleware:
                         "Submitting transaction to measure on-chain gas cost..."
                     )
 
-                    "NEW: Start latency timer, added on 19Oct2025"
+                    # NEW: Start latency timer, added on 19Oct2025
                     latency_start_time = time.perf_counter()
 
+                    # 2. Execute the transaction to measure gas cost and latency
                     tx_hash = self.zkp_contract.functions.verifyProof(
                         commitments, responses, public_keys
                     ).transact({"from": self.ethereum.eth.default_account})
 
                     tx_receipt = self.ethereum.eth.wait_for_transaction_receipt(tx_hash)
 
-                    " NEW: Calculate and record latency,added on 19Oct2025"
+                    # NEW: Calculate and record latency, added on 19Oct2025
                     latency = time.perf_counter() - latency_start_time
                     self.metrics.record("transaction_latency", latency)
 
@@ -227,36 +233,83 @@ class CrossChainMiddleware:
 
         user_attrs, resource_attrs, env_attrs = {}, {}, {}
         dec_count = 0
+        decryption_success = False
+        decrypted_role_num = None  # Store the result here to avoid re-decryption
+
         if zkp_fully_verified:
             self.logger.info(
                 "ZKP fully verified. Decrypting attributes for policy evaluation."
             )
-            user_role_num = self.he.decrypt(encrypted_user_attrs)
-            user_attrs = {"role": self._num_to_role(user_role_num), "org": "hospital_a"}
-            resource_attrs = {"type": "medical_record"}
-            dec_count = 1
+            # ------------------------------------------------------------------
+            # NEW: HE Decryption with Consistency Check (E_c)
+            # ------------------------------------------------------------------
+            try:
+                self.metrics.start_measurement("he_decrypt")
+
+                # FIX: Decrypting User Role (Only once)
+                decrypted_role_num = self.he.decrypt(encrypted_user_attrs)
+
+                # Decrypting Resource Attributes (Assuming one more decryption for resource attrs)
+                # Note: If your system uses encrypted_resource_attrs, you need to decrypt it here.
+                # If your system only decrypts the role, remove this line:
+                # decrypted_resource_info = self.he.decrypt(encrypted_resource_attrs)
+
+                self.metrics.stop_measurement("he_decrypt")
+                self.metrics.increment_count("he_decryption_success")
+                decryption_success = True
+
+            except Exception as e:
+                # This block captures HE-related errors (E_c failure)
+                self.metrics.stop_measurement("he_decrypt")
+                self.logger.error(
+                    f"HE Decryption FAILED due to inconsistency: {e}", exc_info=False
+                )
+                decryption_success = False
+            # ------------------------------------------------------------------
+
+            if decryption_success and decrypted_role_num is not None:
+                # If decryption succeeded, set the attributes for ABAC
+                user_attrs = {
+                    "role": self._num_to_role(decrypted_role_num),
+                    "org": "hospital_a",
+                }
+                resource_attrs = {"type": "medical_record"}
+                dec_count = 1
+            else:
+                # If ZKP was good but HE failed, fail the transaction
+                self.logger.warning(
+                    "Decryption FAILED due to HE inconsistency (E_c error). Attributes will not be set."
+                )
         else:
+            # This handles transactions where ZKP failed (off-chain or on-chain)
             self.logger.warning(
                 "ZKP verification failed. Attributes will not be decrypted."
             )
-
+        # Assuming two HE encryptions occurred upstream (for user and resource attrs)
         self.metrics.record_transaction(enc_count=2, dec_count=dec_count)
 
         decision = self.abac_engine.evaluate(
-            user_attrs, resource_attrs, env_attrs, zkp_fully_verified
+            user_attrs,
+            resource_attrs,
+            env_attrs,
+            zkp_fully_verified
+            and decryption_success,  # Final check now includes E_c result
         )
-
+        # --- FINAL DECISION AND METRIC STOPPING ---
         if decision == "allow":
             self._send_to_cosmos(encrypted_resource_attrs)
             self.metrics.increment_success()
             if expected_role == "doctor":
                 self.metrics.increment_valid_success()
             # *** FIX: Removed emoji for compatibility ***
+            self.metrics.stop_measurement("e2e_time")
             return "Transaction approved and forwarded to Cosmos. [SUCCESS]"
         else:
             self.metrics.increment_error()
             if expected_role != "doctor":
                 self.metrics.increment_adversarial_error()
+            # <METRICS: T_E2E LOGIC> 3. Stop End-to-End Processing Time (DENIAL)
+            self.metrics.stop_measurement("e2e_time")
             return "Access denied by policy. [DENIED]"
 
     def _send_to_cosmos(self, data: bytes):
