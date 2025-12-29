@@ -150,6 +150,7 @@ class CrossChainMiddleware:
         zkp_proof: Tuple[List[int], List[int]],
         expected_role: str = "doctor",
     ) -> str:
+
         """
         Processes an incoming transaction request.
         """
@@ -157,6 +158,8 @@ class CrossChainMiddleware:
             f"--- Handling new transaction, expecting role: '{expected_role}' ---"
         )
         # FIX: Increment total cross-chain attempts for Ms calculation
+        # --- NEW: Initialize phase timers for Hybrid Execution Behavior ---
+        tx_phases = {'zkp': 0.0, 'he': 0.0, 'blockchain': 0.0}
         self.metrics.increment_count("cross_chain_attempt")
 
         try:
@@ -171,9 +174,15 @@ class CrossChainMiddleware:
             return "Access denied: Configuration error."
         public_keys = [public_key]
 
+        # --- NEW: Start ZKP Phase Timer ---
+        zkp_phase_start = time.perf_counter()
+
         offchain_verified = self.zkp.verify_composite_proof(
             commitments, responses, public_keys
         )
+
+        # NEW: Record Success Rate
+        self.metrics.record_verification('zkp', offchain_verified)
 
         onchain_verified = False
         if offchain_verified:
@@ -185,14 +194,19 @@ class CrossChainMiddleware:
                 onchain_verified = self.zkp_contract.functions.verifyProof(
                     commitments, responses, public_keys
                 ).call()
+                # --- NEW: End ZKP Phase Timer ---
+                tx_phases['zkp'] = time.perf_counter() - zkp_phase_start
                 self.logger.info(
                     f"On-chain verification result (from call): {onchain_verified}"
                 )
+                
 
                 if onchain_verified:
                     self.logger.info(
                         "Submitting transaction to measure on-chain gas cost..."
                     )
+                    # --- NEW: Start Blockchain Phase Timer ---
+                    blockchain_start_time = time.perf_counter()
 
                     # NEW: Start latency timer, added on 19Oct2025
                     latency_start_time = time.perf_counter()
@@ -204,6 +218,10 @@ class CrossChainMiddleware:
 
                     tx_receipt = self.ethereum.eth.wait_for_transaction_receipt(tx_hash)
 
+                    # --- NEW: End Blockchain Phase Timer ---
+                    tx_phases['blockchain'] = time.perf_counter() - blockchain_start_time
+
+
                     # NEW: Calculate and record latency, added on 19Oct2025
                     latency = time.perf_counter() - latency_start_time
                     self.metrics.record("transaction_latency", latency)
@@ -214,6 +232,7 @@ class CrossChainMiddleware:
                         f"On-chain transaction successful. Gas used: {gas_used}"
                     )
                 else:
+                    tx_phases['zkp'] = time.perf_counter() - zkp_phase_start
                     self.logger.warning(
                         "On-chain verification returned false. No gas-measuring transaction sent."
                     )
@@ -225,6 +244,7 @@ class CrossChainMiddleware:
                 )
                 onchain_verified = False
         else:
+            tx_phases['zkp'] = time.perf_counter() - zkp_phase_start
             self.logger.warning(
                 "Off-chain ZKP verification failed. Skipping on-chain check."
             )
@@ -244,6 +264,8 @@ class CrossChainMiddleware:
             # NEW: HE Decryption with Consistency Check (E_c)
             # ------------------------------------------------------------------
             try:
+                # --- NEW: Start HE Phase Timer ---
+                he_start_time = time.perf_counter()
                 self.metrics.start_measurement("he_decrypt")
 
                 # FIX: Decrypting User Role (Only once)
@@ -256,7 +278,10 @@ class CrossChainMiddleware:
 
                 self.metrics.stop_measurement("he_decrypt")
                 self.metrics.increment_count("he_decryption_success")
+                self.metrics.record_verification('he', True)
                 decryption_success = True
+                # --- NEW: End HE Phase Timer ---
+                tx_phases['he'] = time.perf_counter() - he_start_time
 
             except Exception as e:
                 # This block captures HE-related errors (E_c failure)
@@ -311,6 +336,7 @@ class CrossChainMiddleware:
             # <METRICS: T_E2E LOGIC> 3. Stop End-to-End Processing Time (DENIAL)
             self.metrics.stop_measurement("e2e_time")
             return "Access denied by policy. [DENIED]"
+        
 
     def _send_to_cosmos(self, data: bytes):
         """Mocks sending data to a Cosmos-based chain."""

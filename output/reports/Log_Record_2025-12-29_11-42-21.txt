@@ -1,0 +1,46 @@
+[2025-12-29 11:42:21] [INFO] [root] - Logging initialized. Full log record will be saved to: output\reports\Log_Record_2025-12-29_11-42-21.txt
+[2025-12-29 11:42:21] [INFO] [EvaluationMetrics] - Metrics reports will be saved to 'output\reports'
+[2025-12-29 11:42:21] [INFO] [SimpleZKP] - Initialized with insecure test parameters (p=23, g=5). DO NOT USE IN PRODUCTION.
+[2025-12-29 11:42:21] [INFO] [HEHelper] - TenSEAL context created successfully.
+[2025-12-29 11:42:21] [INFO] [ABACPolicyEngine] - Initialized with 1 policies.
+[2025-12-29 11:42:21] [INFO] [CrossChainMiddleware] - Connected to Ethereum node. Default account: 0x29006e70481b47d9264B2E45E85e58C52b5eE079
+[2025-12-29 11:42:21] [INFO] [CrossChainMiddleware] - Compiling Solidity files: ['./zkpverifier.sol']...
+[2025-12-29 11:42:22] [CRITICAL] [CrossChainMiddleware] - Solidity compilation failed: An error occurred during execution
+> command: `C:\Users\ASUS\AppData\Local\Programs\Python\Python312\Scripts\solc.exe ./zkpverifier.sol --combined-json abi,bin`
+> return code: `1`
+> stdout:
+
+> stderr:
+"./zkpverifier.sol" is not found.
+[2025-12-29 11:42:22] [CRITICAL] [root] - A critical error occurred: An error occurred during execution
+> command: `C:\Users\ASUS\AppData\Local\Programs\Python\Python312\Scripts\solc.exe ./zkpverifier.sol --combined-json abi,bin`
+> return code: `1`
+> stdout:
+
+> stderr:
+"./zkpverifier.sol" is not found.
+Traceback (most recent call last):
+  File "c:\Users\ASUS\Desktop\Prototype PPABAC\New folder\Dual-Privacy-Preserving-Technique-in-Blockchain-Interoperability\Prot_v3\main.py", line 197, in main
+    middleware = CrossChainMiddleware(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\ASUS\Desktop\Prototype PPABAC\New folder\Dual-Privacy-Preserving-Technique-in-Blockchain-Interoperability\Prot_v3\blockchain_utils.py", line 45, in __init__
+    compiled_sol = self._compile_contracts(Config.CONTRACT_FILES)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\ASUS\Desktop\Prototype PPABAC\New folder\Dual-Privacy-Preserving-Technique-in-Blockchain-Interoperability\Prot_v3\blockchain_utils.py", line 75, in _compile_contracts
+    compiled_sol = compile_files(contract_files, output_values=["abi", "bin"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python312\Lib\site-packages\solcx\main.py", line 216, in compile_files
+    return _compile_combined_json(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python312\Lib\site-packages\solcx\main.py", line 291, in _compile_combined_json
+    stdoutdata, stderrdata, command, proc = wrapper.solc_wrapper(
+                                            ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python312\Lib\site-packages\solcx\wrapper.py", line 158, in solc_wrapper
+    raise SolcError(
+solcx.exceptions.SolcError: An error occurred during execution
+> command: `C:\Users\ASUS\AppData\Local\Programs\Python\Python312\Scripts\solc.exe ./zkpverifier.sol --combined-json abi,bin`
+> return code: `1`
+> stdout:
+
+> stderr:
+"./zkpverifier.sol" is not found.

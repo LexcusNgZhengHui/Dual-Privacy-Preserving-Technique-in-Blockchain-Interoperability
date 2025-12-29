@@ -12,6 +12,10 @@ from typing import Dict, List, Tuple, Union
 import matplotlib.pyplot as plt
 
 from config import Config
+from scipy.stats import norm
+import numpy as np
+import math
+from collections import Counter
 
 
 class EvaluationMetrics:
@@ -30,6 +34,17 @@ class EvaluationMetrics:
         self.valid_success = 0
         self.adversarial_errors = 0
         self.transactions = []
+
+        self.zkp_transcripts = []  # For entropy calculation
+        self.verification_stats = {
+            "zkp_success": 0,
+            "zkp_fail": 0,
+            "he_success": 0,
+            "he_fail": 0,
+        }
+        self.hybrid_behavior_log = (
+            []
+        )  # List of dicts: {'zkp': t1, 'he': t2, 'blockchain': t3}
 
         # NEW: Counter for Encryption Consistency Rate (E_c)
         self.he_decryption_success_count = 0
@@ -192,6 +207,8 @@ class EvaluationMetrics:
         
           =================================================================
         """
+
+
         self.logger.info(report)
 
         self.plot_scalability()
@@ -200,6 +217,13 @@ class EvaluationMetrics:
         self.plot_zkp_performance()
         self.plot_he_operations_per_tx()
         self.plot_gas_usage()
+
+        self.plot_hybrid_execution_behavior()
+        self.plot_verification_success_rate()
+        self.plot_zkp_entropy()
+        self.plot_encryption_consistency()
+        self.plot_leakage_proxy()
+        self.plot_scalability_2()
 
     def _save_plot(self, title: str, filename: str):
         """Helper to save a matplotlib plot."""
@@ -315,3 +339,160 @@ class EvaluationMetrics:
         plt.ylabel("Gas Units")
         plt.legend()
         self._save_plot("On-Chain Gas Fee per Verification", "onchain_gas_fee.png")
+
+    def plot_hybrid_execution_behavior(self):
+        """Plots the breakdown of execution time per component in a stacked bar chart."""
+        if not self.hybrid_behavior_log:
+            return
+
+        labels = [f"Tx {i+1}" for i in range(len(self.hybrid_behavior_log))]
+        zkp_times = [d.get("zkp", 0) for d in self.hybrid_behavior_log]
+        he_times = [d.get("he", 0) for d in self.hybrid_behavior_log]
+        bc_times = [d.get("blockchain", 0) for d in self.hybrid_behavior_log]
+
+        plt.figure(figsize=(10, 6))
+        plt.bar(labels, zkp_times, label="ZKP Phase")
+        plt.bar(labels, he_times, bottom=zkp_times, label="HE Phase")
+        plt.bar(
+            labels,
+            bc_times,
+            bottom=[i + j for i, j in zip(zkp_times, he_times)],
+            label="Blockchain Phase",
+        )
+
+        plt.ylabel("Execution Time (seconds)")
+        plt.legend()
+        self._save_plot("End-to-End Hybrid Execution Behavior", "hybrid_behavior.png")
+
+    def plot_verification_success_rate(self):
+        """Plots a comparison of success rates for ZKP and HE components."""
+        components = ["ZKP", "HE"]
+        successes = [
+            self.verification_stats["zkp_success"],
+            self.verification_stats["he_success"],
+        ]
+        fails = [
+            self.verification_stats["zkp_fail"],
+            self.verification_stats["he_fail"],
+        ]
+
+        x = np.arange(len(components))
+        width = 0.35
+
+        plt.figure(figsize=(8, 6))
+        plt.bar(x - width / 2, successes, width, label="Success", color="green")
+        plt.bar(x + width / 2, fails, width, label="Failure", color="red")
+
+        plt.xticks(x, components)
+        plt.ylabel("Count")
+        plt.legend()
+        self._save_plot(
+            "Cryptographic Verification Success Rate", "verification_success.png"
+        )
+
+    def plot_zkp_entropy(self):
+        """Plots the distribution of entropy values for generated ZKP transcripts."""
+        entropy_values = [
+            self._calculate_shannon_entropy(t) for t in self.zkp_transcripts
+        ]
+
+        plt.figure(figsize=(10, 6))
+        plt.hist(entropy_values, bins=10, color="purple", alpha=0.7, edgecolor="black")
+        plt.xlabel("Shannon Entropy (bits)")
+        plt.ylabel("Frequency")
+        self._save_plot(
+            "Entropy Distribution of ZKP Transcripts", "zkp_entropy_dist.png"
+        )
+
+    def record_verification(self, component, success):
+        key = f"{component}_{'success' if success else 'fail'}"
+        self.verification_stats[key] += 1
+
+    def _calculate_shannon_entropy(self, data):
+        """Calculates the Shannon entropy of a list of integers (ZKP transcript)."""
+        if not data:
+            return 0
+        counts = Counter(data)
+        total = len(data)
+        return -sum(
+            (count / total) * math.log2(count / total) for count in counts.values()
+        )
+
+    def plot_encryption_consistency(self):
+        """Plots the success rate of HE decryptions (Ec)."""
+        labels = ["Successful Decryptions", "Failed/Inconsistent"]
+        # Ec success count is already tracked in your metrics
+        successes = self.he_decryption_success_count
+        failures = Config.NUM_TRANSACTIONS - successes
+
+        plt.figure(figsize=(8, 6))
+        plt.pie(
+            [successes, max(0, failures)],
+            labels=labels,
+            autopct="%1.1f%%",
+            colors=["#4CAF50", "#F44336"],
+        )
+        self._save_plot("Encryption Consistency Rate (E_c)", "he_consistency_rate.png")
+
+    def plot_leakage_proxy(self):
+        """Plots the ZKP proof transmission size (Pl proxy) over time."""
+        # Ensure the metric exists and has data to avoid errors
+        if "proof_transmission_size" not in self.metrics or not self.metrics["proof_transmission_size"]:
+            self.logger.warning("No data found for proof_transmission_size. Skipping plot.")
+            return
+
+        plt.figure(figsize=(10, 6))
+        sizes = self.metrics["proof_transmission_size"]
+        plt.plot(sizes, marker='s', linestyle='-', color='purple', label='Proof Size (Bytes)')
+        
+        # Calculate average for the horizontal reference line
+        avg_size = sum(sizes) / len(sizes)
+        plt.axhline(y=avg_size, color='r', linestyle='--', label=f'Avg Leakage Proxy ({avg_size:.2f} bytes)')
+        
+        plt.xlabel("Transaction Sequence")
+        plt.ylabel("Data Size (Bytes)")
+        plt.legend()
+        # Use the helper function already in your Allinone_v7.txt [cite: 52]
+        self._save_plot("Information Leakage Proxy (P_l) Analysis", "zkp_leakage_proxy.png")
+
+
+    def plot_scalability_2(self):
+        self._apply_journal_style()
+        plt.figure(figsize=(8, 5))
+        
+        def process_data(metric_key):
+            data_map = defaultdict(list)
+            for attr_count, duration in self.metrics[metric_key]:
+                data_map[attr_count].append(duration)
+            x = sorted(data_map.keys())
+            y_mean = [np.mean(data_map[i]) for i in x]
+            y_std = [np.std(data_map[i]) for i in x]
+            return x, y_mean, y_std
+
+        x, y_gen, std_gen = process_data("zkp_gen_scalability")
+        plt.errorbar(x, y_gen, yerr=std_gen, marker='s', capsize=5, label=r'ZKP Gen ($T_{gen}$)', color='#1f77b4')
+        
+        x, y_ver, std_ver = process_data("zkp_verify_scalability")
+        plt.errorbar(x, y_ver, yerr=std_ver, marker='^', capsize=5, label=r'ZKP Verify ($V_{on}$)', color='#ff7f0e')
+
+        plt.xlabel(r"Number of Attributes ($|A|$)")
+        plt.ylabel("Time (seconds)")
+        plt.legend(loc="upper left")
+        self._save_plot("Scalability Analysis of ZKP Layer", "journal_zkp_scalability.png")
+
+    def _apply_journal_style(self):
+        """Sets global plot parameters for journal quality."""
+        plt.rcParams.update({
+            "font.family": "serif",
+            "font.size": 12,
+            "axes.labelsize": 14,
+            "axes.titlesize": 16,
+            "xtick.labelsize": 12,
+            "ytick.labelsize": 12,
+            "legend.fontsize": 12,
+            "axes.grid": True,
+            "grid.alpha": 0.3,
+            "grid.linestyle": "--",
+            "figure.constrained_layout.use": True,
+            "savefig.dpi": 300  # High resolution
+        })

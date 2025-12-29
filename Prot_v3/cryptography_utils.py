@@ -102,6 +102,8 @@ class SimpleZKP:
         proof_size_bytes = sys.getsizeof(proof_str)
         self.metrics.record("proof_transmission_size", proof_size_bytes)
         self.logger.info(f"Generated ZKP proof size (proxy): {proof_size_bytes} bytes.")
+        transcript = commitments + responses
+        self.metrics.zkp_transcripts.append(transcript)
 
         return commitments, responses
 
