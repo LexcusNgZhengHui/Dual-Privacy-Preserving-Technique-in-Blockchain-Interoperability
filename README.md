@@ -1,5 +1,4 @@
 # Dual-Privacy-Preserving-Technique-in-Blockchain-Interoperability
-# Dual Privacy-Preserving Technique in Blockchain Interoperability
 
 A Proof of Concept (PoC) demonstrating a **dual privacy-preserving technique for blockchain interoperability** by combining **Zero-Knowledge Proofs (ZKP)** and **Homomorphic Encryption (HE)** with **Attribute-Based Access Control (ABAC)**.
 
